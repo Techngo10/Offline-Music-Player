@@ -1,1 +1,34 @@
 # Offline-Music-Player
+
+A simple offline music player built in Python using `pygame`.  
+Supports play, pause, resume, stop, next/previous track, shuffle, and loop.
+
+---
+
+## Setup Instructions
+
+1. **Clone the repository**
+```bash
+git clone <your-repo-url>
+cd Offline-Music-Player
+```
+
+2. Set up the virtual environment
+python -m venv .venv
+
+3. Activate it in powershell terminal and run
+.venv\Scripts\activate
+
+.venv\Scripts\activate.bat
+
+5. Run the needed python dependencies
+pip install pygame
+
+6. Add music files
+ └── songs/
+     ├── songname.mp3
+     ├── songname.mp3
+     └── songname.mp3
+
+7. Run the CLI player
+python cli_player.py
