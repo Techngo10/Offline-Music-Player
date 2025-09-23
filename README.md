@@ -1,7 +1,7 @@
 # Offline-Music-Player
 
 A simple offline music player built in Python using `pygame`.  
-Supports play, pause, resume, stop, next/previous track, shuffle, and loop.
+Supports play, pause, next/previous track, shuffle, and loop.
 
 ---
 
