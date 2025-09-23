@@ -45,9 +45,7 @@ python cli_player.py
 | Command | Description                           |
 | ------- | ------------------------------------- |
 | play    | Play current song (resumes if paused) |
-| pause   | Pause current song                    |
-| resume  | Resume paused song                    |
-| stop    | Stop playback                         |
+| pause   | Pause current song                    |                  |
 | next    | Play next song                        |
 | prev    | Play previous song                    |
 | shuffle | Toggle shuffle mode                   |
