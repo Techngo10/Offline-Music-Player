@@ -14,21 +14,43 @@ cd Offline-Music-Player
 ```
 
 2. Set up the virtual environment
+```
 python -m venv .venv
+```
 
-3. Activate it in powershell terminal and run
+4. Activate it in powershell terminal and run
+```
 .venv\Scripts\activate
-
 .venv\Scripts\activate.bat
+```
 
 5. Run the needed python dependencies
+```
 pip install pygame
+```
 
-6. Add music files
+7. Add music files
+```
  └── songs/
      ├── songname.mp3
      ├── songname.mp3
      └── songname.mp3
+```
 
-7. Run the CLI player
+9. Run the CLI player
+```
 python cli_player.py
+```
+
+| Command | Description                           |
+| ------- | ------------------------------------- |
+| play    | Play current song (resumes if paused) |
+| pause   | Pause current song                    |
+| resume  | Resume paused song                    |
+| stop    | Stop playback                         |
+| next    | Play next song                        |
+| prev    | Play previous song                    |
+| shuffle | Toggle shuffle mode                   |
+| loop    | Toggle loop mode                      |
+| quit    | Exit the program                      |
+
