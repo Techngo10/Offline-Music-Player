@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
-from music_player import MusicPlayer, choose_folder
 import os
+import pygame
+from music_player import MusicPlayer, choose_folder
+
 
 class MusicApp:
     def __init__(self, root):
@@ -10,11 +12,11 @@ class MusicApp:
         self.root.geometry("900x500")
         self.root.configure(bg="#121212")
 
-        # --- Initialize player and states ---
+        # --- Initialize player ---
         self.playlist = choose_folder()
         self.player = MusicPlayer(self.playlist)
         self.is_playing = False
-        self.scroll_job = None  # track marquee animation job
+        self.scroll_job = None
 
         # --- Styles ---
         style = ttk.Style()
@@ -27,18 +29,18 @@ class MusicApp:
 
     def build_ui(self):
         # --- Top Bar ---
-        top_bar = tk.Frame(self.root, bg="#121212", height=50, pady=10)
+        top_bar = tk.Frame(self.root, bg="#181818", height=50, pady=10)
         top_bar.pack(side="top", fill="x")
-        ttk.Button(top_bar, text="Home").grid(row=0, column=0, padx=10)
-        ttk.Button(top_bar, text="Download").grid(row=0, column=1, padx=10)
+        ttk.Button(top_bar, text="Home").pack(side="left", padx=15)
+        ttk.Button(top_bar, text="Download").pack(side="left", padx=15)
 
-        # --- Main Area Placeholder ---
-        main_frame = tk.Frame(self.root, bg="#535353")
+        # --- Main Area ---
+        main_frame = tk.Frame(self.root, bg="#121212")
         main_frame.pack(fill="both", expand=True)
-        ttk.Label(main_frame, text="(Playlist view coming soon)", foreground="#888", background="#535353").pack(pady=150)
+        ttk.Label(main_frame, text="(Playlist view coming soon)", foreground="#888", background="#121212").pack(pady=150)
 
-        # --- Bottom Bar ---
-        bottom_bar = tk.Frame(self.root, bg="#121212", height=100)
+        # --- Bottom Playback Bar ---
+        bottom_bar = tk.Frame(self.root, bg="#181818", height=100)
         bottom_bar.pack(side="bottom", fill="x")
 
         bottom_bar.columnconfigure(0, weight=1)
@@ -50,21 +52,10 @@ class MusicApp:
         self.song_info_frame.grid(row=0, column=0, sticky="w", padx=30, pady=10)
         self.song_info_frame.pack_propagate(False)
 
-        self.song_title = ttk.Label(
-            self.song_info_frame,
-            text="No song playing",
-            font=("Segoe UI", 11, "bold"),
-            anchor="w"
-        )
+        self.song_title = ttk.Label(self.song_info_frame, text="No song playing", font=("Segoe UI", 11, "bold"), anchor="w")
         self.song_title.pack(fill="x")
 
-        self.song_artist = ttk.Label(
-            self.song_info_frame,
-            text="",
-            font=("Segoe UI", 9),
-            foreground="#B3B3B3",
-            anchor="w"
-        )
+        self.song_artist = ttk.Label(self.song_info_frame, text="", font=("Segoe UI", 9), foreground="#B3B3B3", anchor="w")
         self.song_artist.pack(fill="x")
 
         # --- Center: Playback Controls ---
@@ -82,35 +73,22 @@ class MusicApp:
         # --- Right: Volume ---
         volume_frame = tk.Frame(bottom_bar, bg="#181818")
         volume_frame.grid(row=0, column=2, sticky="e", padx=30)
+
         ttk.Label(volume_frame, text="🔊", background="#181818").pack(side="left", padx=5)
         volume_slider = ttk.Scale(volume_frame, from_=0, to=100, orient="horizontal", length=120)
         volume_slider.set(70)
         volume_slider.pack(side="left")
 
-    # --- Player Controls ---
+    # --- Playback controls ---
     def toggle_play(self):
-        if not self.playlist:
-            print("❌ No songs loaded.")
-            return
-
-        # If paused, resume
-        if self.player.is_paused:
-            self.player.resume()
-            self.is_playing = True
+        self.player.toggle_play()
+        if pygame.mixer.music.get_busy() and not self.player.is_paused:
             self.play_button.config(text="⏸")
-            return
-
-        # If not playing, start playing
-        if not self.is_playing:
-            self.player.play()
             self.is_playing = True
-            self.play_button.config(text="⏸")
             self.update_song_info()
         else:
-            # Otherwise pause
-            self.player.pause()
-            self.is_playing = False
             self.play_button.config(text="▶")
+            self.is_playing = False
 
     def next_song(self):
         self.player.next_song()
@@ -124,12 +102,15 @@ class MusicApp:
         self.play_button.config(text="⏸")
         self.update_song_info()
 
-    # --- Info Update + Marquee ---
+    # --- Update song info + marquee ---
     def update_song_info(self):
-        """Update the display with the current song and reset marquee."""
+        if not self.player.playlist:
+            return
+
         song_path = self.player.playlist[self.player.current_index]
         song_name = os.path.basename(song_path)
         song_name, _ = os.path.splitext(song_name)
+
         self.song_title.config(text=song_name)
         self.song_artist.config(text="Unknown Artist")
 
@@ -141,13 +122,13 @@ class MusicApp:
             self.scroll_text(song_name + "   ", 0)
 
     def scroll_text(self, text, pos):
-        """Smooth scrolling marquee effect."""
-        cropped = text[pos:pos+25]
+        cropped = text[pos:pos + 25]
         if len(cropped) < 25:
             cropped += text[:25 - len(cropped)]
         self.song_title.config(text=cropped)
         next_pos = (pos + 1) % len(text)
         self.scroll_job = self.root.after(200, lambda: self.scroll_text(text, next_pos))
+
 
 # --- Run App ---
 if __name__ == "__main__":
