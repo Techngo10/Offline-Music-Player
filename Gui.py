@@ -67,7 +67,6 @@ def delete_playlist():
 
     disp_playlists()
     songsListbox.delete(0, tk.END)
-    showPlaylistSongs()
 
 def showPlaylistSongs(event):
     #Display palylist's songs in the listbox.
