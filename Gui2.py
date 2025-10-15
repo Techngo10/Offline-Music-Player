@@ -3,16 +3,29 @@ from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 import os
 from Classes import User, Playlist
+from musicPlayer import MusicPlayer, choose_folder
 
 DB_FILE = "musicApp.db"
 curr_user = User(DB_FILE, 1)  # testing: assume user 1 is logged in
 
 class MusicApp:
+
     def __init__(self, root):
         self.root = root
         self.root.title("Offline Music Player")
         self.root.geometry("900x600")
         self.root.configure(bg="#121212")
+
+        # --- Elijah's Testing ---
+        #self.playlist = choose_folder()  # opens file dialog and gets all songs in a folder
+        #self.player = MusicPlayer(self.playlist)
+
+        # We are gonna need to create a local folder, (so a folder on your computer) that stores all downloaded songs
+        # and then we can set that as the default music folder for the player (we can either make a thing to create it)
+        # or just tell the user to create a folder and select it the first time they run the app
+        # We also need to change our database to store a local download folder
+        # Ill probably keep the choose_folder function and use it to select the download folder
+        # and then we can store that in the database for the user
 
         # currently selected playlist id
         self.current_playlist_id = None
@@ -30,11 +43,13 @@ class MusicApp:
         style.map("TButton", background=[("active", "#1ED760")])
 
         # --- Top Bar ---
-        self.top_bar = tk.Frame(self.root, bg="#181818", height=50)
+        self.top_bar = tk.Frame(self.root, bg="#181818", height=100)
         self.top_bar.grid(row=0, column=0, sticky="nsew")
         self.top_bar.grid_propagate(False)
         tk.Label(self.top_bar, text="🎵 Offline Music Player", fg="white", bg="#181818",
                  font=("Segoe UI", 12, "bold")).pack(side="left", padx=15, pady=10)
+        ttk.Button(self.top_bar, text="Account").pack(fill="x", side=tk.LEFT, padx=10, pady=4)
+        ttk.Button(self.top_bar, text="Download").pack(fill="x", side=tk.LEFT,padx=10, pady=4)
 
         # --- Main Content ---
         self.main_frame = tk.Frame(self.root, bg="#121212")
@@ -100,9 +115,9 @@ class MusicApp:
         # Player buttons
         player_controls = tk.Frame(self.bottom_bar, bg="#181818")
         player_controls.grid(row=0, column=1)
-        ttk.Button(player_controls, text="⏮").grid(row=0, column=0, padx=5)
-        ttk.Button(player_controls, text="▶").grid(row=0, column=1, padx=5)
-        ttk.Button(player_controls, text="⏭").grid(row=0, column=2, padx=5)
+        ttk.Button(player_controls, text="⏮", command=self.player.previous_song).grid(row=0, column=0, padx=5)
+        ttk.Button(player_controls, text="▶", command=self.player.toggle_play).grid(row=0, column=1, padx=5)
+        ttk.Button(player_controls, text="⏭", command=self.player.next_song).grid(row=0, column=2, padx=5)
 
         # Volume
         volume_frame = tk.Frame(self.bottom_bar, bg="#181818")
