@@ -56,15 +56,17 @@ def delete_playlist():
     global playlist_ids
 
     pl = Playlist(DB_FILE, current_playlist_id)
-
-    playlist_ids.pop(current_playlist_id)
-
     pl.deletePlaylist()
+
+    if current_playlist_id in playlist_ids:
+        index_to_remove = playlist_ids.index(current_playlist_id)
+        playlist_ids.pop(index_to_remove)
 
     current_playlist_id = 0
     messagebox.showinfo("Deleted", "Playlist deleted.")
 
     disp_playlists()
+    songsListbox.delete(0, tk.END)
     showPlaylistSongs()
 
 def showPlaylistSongs(event):
