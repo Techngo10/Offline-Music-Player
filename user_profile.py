@@ -4,7 +4,7 @@ from tkinter import messagebox, filedialog
 
 DB_FILE = "musicApp.db"
 
-# ----------------- Database Functions -----------------
+# Database query and update functions
 def get_current_user():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -39,15 +39,14 @@ def update_user_profile(user_id, first_name, last_name, email, phone_no, profile
     conn.close()
     return True
 
-# ----------------- GUI -----------------
+
 class UserProfileGUI:
     def __init__(self, root, user):
         self.user = user
         root.title("User Profile")
         root.attributes('-fullscreen', True)
-        root.config(bg="white")  # make entire window white
+        root.config(bg="white")  
 
-        # --- Profile Frame ---
         frame = tk.Frame(root, padx=50, pady=50, bg="white")
         frame.pack(fill="both", expand=True)
 
@@ -111,7 +110,6 @@ class UserProfileGUI:
         update_user_profile(self.user["id"], first_name, last_name, email, phone_no, profile_pic)
         messagebox.showinfo("Success", "Profile updated successfully!")
 
-# ----------------- Run GUI -----------------
 if __name__ == "__main__":
     current_user = get_current_user()
     if not current_user:

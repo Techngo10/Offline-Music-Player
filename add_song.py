@@ -8,7 +8,7 @@ DB_FILE = "musicApp.db"
 DOWNLOAD_DIR = "downloads"
 MAX_RESULTS = 5
 
-# ----------------- Database functions -----------------
+# Database function
 def get_current_user():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -20,7 +20,6 @@ def get_current_user():
         return {"id": user[0], "username": user[1]}
     else:
         return None
-
 
 def get_user_playlists(user_id):
     conn = sqlite3.connect(DB_FILE)
@@ -54,7 +53,7 @@ def add_song_to_playlist(playlist_id, song_id):
     finally:
         conn.close()
 
-# ----------------- YouTube download -----------------
+# Youtube function
 def search_youtube(query, max_results=MAX_RESULTS):
     ydl_opts = {'quiet': True, 'skip_download': True, 'default_search': f'ytsearch{max_results}'}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -88,36 +87,27 @@ def download_youtube_audio(video_url, user_folder):
     }
     return metadata
 
-# ----------------- GUI -----------------
-# ----------------- GUI -----------------
+# GUI
 class MusicDownloaderGUI:
     def __init__(self, root, current_user):
         self.root = root
         root.title("YouTube Music Downloader & Playlist")
         root.geometry("550x400")
-        root.config(bg="#F0F2F5")
+        root.config(bg="white")  # all white background
 
         self.user_id = current_user["id"]
         self.username = current_user["username"]
 
-        # --- Styling ---
-        self.bg_color = "#F0F2F5"
-        self.card_color = "#FFFFFF"
-        self.primary_color = "#4A90E2"
-        self.text_color = "#333333"
         self.font_label = ("Arial", 12)
         self.font_button = ("Arial", 11, "bold")
 
-        # --- Main Frame ---
-        main_frame = tk.Frame(root, bg=self.bg_color)
+        main_frame = tk.Frame(root, bg="white")
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # --- Logged-in User ---
-        user_label = tk.Label(main_frame, text=f"Logged in as: {self.username}", font=("Arial", 13, "bold"), bg=self.bg_color)
+        user_label = tk.Label(main_frame, text=f"Logged in as: {self.username}", font=("Arial", 13, "bold"), bg="white", fg="black")
         user_label.pack(pady=10)
 
-        # --- Playlist Frame ---
-        playlist_frame = tk.LabelFrame(main_frame, text="Select Playlist", bg=self.card_color, fg=self.text_color, font=self.font_label, bd=1, relief="solid")
+        playlist_frame = tk.LabelFrame(main_frame, text="Select Playlist", bg="white", fg="black", font=self.font_label, bd=1, relief="solid")
         playlist_frame.pack(fill="x", pady=10, padx=10)
 
         self.playlist_var = tk.StringVar()
@@ -125,16 +115,15 @@ class MusicDownloaderGUI:
         self.playlist_dropdown.pack(pady=10, padx=10)
         self.load_playlists()
 
-        # --- Song Download Frame ---
-        song_frame = tk.LabelFrame(main_frame, text="Download Song", bg=self.card_color, fg=self.text_color, font=self.font_label, bd=1, relief="solid")
+        song_frame = tk.LabelFrame(main_frame, text="Download Song", bg="white", fg="black", font=self.font_label, bd=1, relief="solid")
         song_frame.pack(fill="x", pady=10, padx=10)
 
-        tk.Label(song_frame, text="Song Name:", bg=self.card_color, font=self.font_label).pack(anchor="w", padx=10, pady=(10, 0))
-        self.song_entry = tk.Entry(song_frame, width=40, font=self.font_label)
+        tk.Label(song_frame, text="Song Name:", bg="white", fg="black", font=self.font_label).pack(anchor="w", padx=10, pady=(10, 0))
+        self.song_entry = tk.Entry(song_frame, width=40, font=self.font_label, fg="black", bg="white", bd=1, relief="solid", insertbackground="black")
         self.song_entry.pack(pady=5, padx=10)
 
-        download_btn = tk.Button(song_frame, text="Download & Add to Playlist", bg=self.primary_color, fg="white",
-                                 font=self.font_button, width=30, height=2, command=self.download_and_add)
+        download_btn = tk.Button(song_frame, text="Download & Add to Playlist", bg="white", fg="black",
+                                 font=self.font_button, width=30, height=2, bd=1, relief="solid", command=self.download_and_add)
         download_btn.pack(pady=15)
 
     def load_playlists(self):
@@ -155,14 +144,12 @@ class MusicDownloaderGUI:
         playlist_id = self.playlists[playlist_index][0]
         user_folder = os.path.join(DOWNLOAD_DIR, self.username)
 
-        # Search YouTube
         results = search_youtube(song_query)
         if not results:
             messagebox.showinfo("No Results", "No YouTube videos found.")
             return
         video_url = results[0]['webpage_url']
 
-        # Download song
         metadata = download_youtube_audio(video_url, user_folder)
         song_id = add_song_to_db(
             DB_FILE,
@@ -173,14 +160,13 @@ class MusicDownloaderGUI:
             cover_art=metadata['cover_art']
         )
 
-        # Add to playlist
         success, msg = add_song_to_playlist(playlist_id, song_id)
         if success:
             messagebox.showinfo("Success", f"Downloaded '{metadata['song_name']}' and added to playlist!")
         else:
             messagebox.showerror("Error", msg)
 
-# ----------------- Run App -----------------
+
 if __name__ == "__main__":
     current_user = get_current_user()
     if not current_user:
@@ -190,4 +176,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = MusicDownloaderGUI(root, current_user)
     root.mainloop()
-
