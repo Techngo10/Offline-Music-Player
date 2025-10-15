@@ -98,7 +98,10 @@ def showPlaylistSongs(event):
    #display cover image
     if cover_path and os.path.exists(cover_path):
         try:
-            tk_img = tk.PhotoImage(file=cover_path)
+            img = Image.open(cover_path)
+            img = img.resize((200, 200))
+            tk_img = ImageTk.PhotoImage(img)
+
             playlistCover.config(image=tk_img, text="")
             playlistCover.image = tk_img  # prevent garbage collection
         except Exception as e:
@@ -134,16 +137,27 @@ def RemoveSong():
     song_info = songsListbox.get(selection[0])
     pl = Playlist(DB_FILE, current_playlist_id)
     pl.removeSong(song_info)
-    showPlaylistSongs()
+    disp_playlists()
 
 
 def AddPlaylistCover():
-    #upload new playlist cover
+     #upload new playlist cover
+
     global current_playlist_id  
 
+    file_types = [("PNG images", "*.png"),("all files","*.*")]
+
+    files = tk.Toplevel()
+    files.withdraw()
+    file_path = filedialog.askopenfilename(title="Select Cover Image", filetypes=file_types, parent = files)
+    files.destroy()
+
+    if not file_path:
+        return  # user cancelled
+
     pl = Playlist(DB_FILE, current_playlist_id)
-    pl.uploadCover() #need something here that then actually uploads an image tooo store
-    showPlaylistSongs()
+    pl.uploadCover(file_path) 
+    disp_playlists()
 
 def deletePlaylistCover():
     #delete playlist cover
@@ -151,7 +165,7 @@ def deletePlaylistCover():
 
     pl = Playlist(DB_FILE, current_playlist_id)
     pl.removeCover()
-    showPlaylistSongs()
+    disp_playlists()
     
 
 
