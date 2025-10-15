@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 import os
+import sqlite3
 from Classes import User, Playlist
 from musicPlayer import MusicPlayer, choose_folder
 
@@ -18,14 +19,18 @@ class MusicApp:
 
         # --- Elijah's Testing ---
         #self.playlist = choose_folder()  # opens file dialog and gets all songs in a folder
-        #self.player = MusicPlayer(self.playlist)
+        self.player = MusicPlayer([])
+        self.current_playlist_paths = []
 
         # We are gonna need to create a local folder, (so a folder on your computer) that stores all downloaded songs
-        # and then we can set that as the default music folder for the player (we can either make a thing to create it)
+        #and then we can set that as the default music folder for the player (we can either make a thing to create it)
         # or just tell the user to create a folder and select it the first time they run the app
         # We also need to change our database to store a local download folder
         # Ill probably keep the choose_folder function and use it to select the download folder
         # and then we can store that in the database for the user
+
+        #ok seems we have a downloads folder now, but assuming that the user doesnt we will keep it optional, might need
+        #need to add a button that lets user change their download folder or make one
 
         # currently selected playlist id
         self.current_playlist_id = None
@@ -115,9 +120,9 @@ class MusicApp:
         # Player buttons
         player_controls = tk.Frame(self.bottom_bar, bg="#181818")
         player_controls.grid(row=0, column=1)
-        ttk.Button(player_controls, text="⏮", command=self.player.previous_song).grid(row=0, column=0, padx=5)
+        ttk.Button(player_controls, text="⏮", command=self.previous_song).grid(row=0, column=0, padx=5)
         ttk.Button(player_controls, text="▶", command=self.player.toggle_play).grid(row=0, column=1, padx=5)
-        ttk.Button(player_controls, text="⏭", command=self.player.next_song).grid(row=0, column=2, padx=5)
+        ttk.Button(player_controls, text="⏭", command=self.next_song).grid(row=0, column=2, padx=5)
 
         # Volume
         volume_frame = tk.Frame(self.bottom_bar, bg="#181818")
@@ -215,7 +220,38 @@ class MusicApp:
             self.cover_label.config(image="", text="No cover")
 
     def play_playlist(self):
-        messagebox.showinfo("Play", "Playlist is now playing!")
+        if not self.current_playlist_id:
+            messagebox.showwarning("Oops", "Select a playlist first!")
+            return
+
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.file_path 
+            FROM playlist_songs ps
+            JOIN songsDownloaded s ON ps.song_id = s.song_id
+            WHERE ps.playlist_id = ?
+        """, (self.current_playlist_id,))
+        files = [row[0] for row in cursor.fetchall()]
+        conn.close()
+
+        if not files:
+            messagebox.showwarning("Empty", "No valid songs found for this playlist.")
+            return
+
+        self.player.playlist = files
+        self.player.current_index = 0
+        self.player.play()
+
+        self.update_song_info(files[0])
+
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT playlist_name FROM playlist WHERE playlist_id = ?", (self.current_playlist_id,))
+        pl_name = cursor.fetchone()[0]
+        conn.close()
+        messagebox.showinfo("Now Playing", f"Playing playlist: {pl_name}")
+
 
     def remove_song(self):
         selection = self.songs_box.curselection()
@@ -256,6 +292,55 @@ class MusicApp:
         pl.removeCover()
         self.show_playlist_songs()
         messagebox.showinfo("Success", "Cover image removed!")
+    
+    def viewSongs(self):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.song_id, s.song_name, s.artist_name, s.album_name, s.length, s.file_path
+            FROM songsDownloaded s
+            JOIN playlist_songs ps ON s.song_id = ps.song_id
+            WHERE ps.playlist_id = ?
+        """, (self.playlist_id,))
+        songs = cursor.fetchall()
+        conn.close()
+        return songs
+    
+    def update_song_info(self, song_path):
+        """ Update the bottom bar labels based on the currently playing song. """
+        if not song_path or not os.path.exists(song_path):
+            self.song_title_label.config(text="Song Title")
+            self.song_artist_label.config(text="Artist Name")
+            return
+
+        # Query DB for this song
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT song_name, artist_name
+            FROM songsDownloaded
+            WHERE file_path = ?
+        """, (song_path,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            song_name, artist_name = result
+            self.song_title_label.config(text=song_name)
+            self.song_artist_label.config(text=artist_name)
+        else:
+            self.song_title_label.config(text="Unknown")
+            self.song_artist_label.config(text="Unknown")
+
+    def next_song(self):
+        self.player.next_song()
+        current_file = self.player.playlist[self.player.current_index]
+        self.update_song_info(current_file)
+
+    def previous_song(self):
+        self.player.previous_song()
+        current_file = self.player.playlist[self.player.current_index]
+        self.update_song_info(current_file)
 
 if __name__ == "__main__":
     root = tk.Tk()
