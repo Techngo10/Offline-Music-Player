@@ -6,6 +6,13 @@ cursor = conn.cursor()
 cursor.execute("PRAGMA foreign_keys = ON")
 
 cursor.execute("""
+    CREATE TABLE IF NOT EXISTS current_user (
+        user_id INTEGER UNIQUE,
+        FOREIGN KEY(user_id) REFERENCES users(user_id)
+    )
+""")
+
+cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     first_name TEXT,

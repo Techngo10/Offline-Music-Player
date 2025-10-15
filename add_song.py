@@ -8,14 +8,18 @@ DB_FILE = "musicApp.db"
 DOWNLOAD_DIR = "downloads"
 MAX_RESULTS = 5
 
-# ----------------- Database functions -----------------
-def get_all_users():
+# Database function
+def get_current_user():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    cursor.execute("SELECT user_id, username FROM users")
-    users = cursor.fetchall()
+    cursor.execute("SELECT u.user_id, u.username FROM current_user cu JOIN users u ON cu.user_id = u.user_id")
+    user = cursor.fetchone()
     conn.close()
-    return users
+    
+    if user:
+        return {"id": user[0], "username": user[1]}
+    else:
+        return None
 
 def get_user_playlists(user_id):
     conn = sqlite3.connect(DB_FILE)
@@ -49,7 +53,7 @@ def add_song_to_playlist(playlist_id, song_id):
     finally:
         conn.close()
 
-# ----------------- YouTube download -----------------
+# Youtube function
 def search_youtube(query, max_results=MAX_RESULTS):
     ydl_opts = {'quiet': True, 'skip_download': True, 'default_search': f'ytsearch{max_results}'}
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -83,41 +87,46 @@ def download_youtube_audio(video_url, user_folder):
     }
     return metadata
 
-# ----------------- GUI -----------------
+# GUI
 class MusicDownloaderGUI:
-    def __init__(self, root):
+    def __init__(self, root, current_user):
         self.root = root
         root.title("YouTube Music Downloader & Playlist")
         root.geometry("550x400")
+        root.config(bg="white")  # all white background
 
-        # --- Select User ---
-        tk.Label(root, text="Select User:", font=("Arial", 12)).pack(pady=5)
-        self.user_var = tk.StringVar()
-        self.users = get_all_users()
-        self.user_dropdown = ttk.Combobox(root, textvariable=self.user_var, state="readonly")
-        self.user_dropdown['values'] = [f"{u[1]} (ID:{u[0]})" for u in self.users]
-        self.user_dropdown.pack(pady=5)
-        self.user_dropdown.bind("<<ComboboxSelected>>", self.load_playlists)
+        self.user_id = current_user["id"]
+        self.username = current_user["username"]
 
-        # --- Select Playlist ---
-        tk.Label(root, text="Select Playlist:", font=("Arial", 12)).pack(pady=5)
+        self.font_label = ("Arial", 12)
+        self.font_button = ("Arial", 11, "bold")
+
+        main_frame = tk.Frame(root, bg="white")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        user_label = tk.Label(main_frame, text=f"Logged in as: {self.username}", font=("Arial", 13, "bold"), bg="white", fg="black")
+        user_label.pack(pady=10)
+
+        playlist_frame = tk.LabelFrame(main_frame, text="Select Playlist", bg="white", fg="black", font=self.font_label, bd=1, relief="solid")
+        playlist_frame.pack(fill="x", pady=10, padx=10)
+
         self.playlist_var = tk.StringVar()
-        self.playlist_dropdown = ttk.Combobox(root, textvariable=self.playlist_var, state="readonly")
-        self.playlist_dropdown.pack(pady=5)
+        self.playlist_dropdown = ttk.Combobox(playlist_frame, textvariable=self.playlist_var, state="readonly", width=40, font=self.font_label)
+        self.playlist_dropdown.pack(pady=10, padx=10)
+        self.load_playlists()
 
-        # --- Song Search ---
-        tk.Label(root, text="Song Name to Download:", font=("Arial", 12)).pack(pady=5)
-        self.song_entry = tk.Entry(root, width=40, font=("Arial", 12))
-        self.song_entry.pack(pady=5)
+        song_frame = tk.LabelFrame(main_frame, text="Download Song", bg="white", fg="black", font=self.font_label, bd=1, relief="solid")
+        song_frame.pack(fill="x", pady=10, padx=10)
 
-        # --- Download Button ---
-        tk.Button(root, text="Download & Add to Playlist", command=self.download_and_add, bg="#4A90E2", fg="white").pack(pady=15)
+        tk.Label(song_frame, text="Song Name:", bg="white", fg="black", font=self.font_label).pack(anchor="w", padx=10, pady=(10, 0))
+        self.song_entry = tk.Entry(song_frame, width=40, font=self.font_label, fg="black", bg="white", bd=1, relief="solid", insertbackground="black")
+        self.song_entry.pack(pady=5, padx=10)
 
-    def load_playlists(self, event=None):
-        user_index = self.user_dropdown.current()
-        if user_index == -1:
-            return
-        self.user_id = self.users[user_index][0]
+        download_btn = tk.Button(song_frame, text="Download & Add to Playlist", bg="white", fg="black",
+                                 font=self.font_button, width=30, height=2, bd=1, relief="solid", command=self.download_and_add)
+        download_btn.pack(pady=15)
+
+    def load_playlists(self):
         playlists = get_user_playlists(self.user_id)
         self.playlists = playlists
         self.playlist_dropdown['values'] = [f"{p[1]} (ID:{p[0]})" for p in playlists]
@@ -125,25 +134,22 @@ class MusicDownloaderGUI:
             self.playlist_dropdown.current(0)
 
     def download_and_add(self):
-        user_index = self.user_dropdown.current()
         playlist_index = self.playlist_dropdown.current()
         song_query = self.song_entry.get().strip()
 
-        if user_index == -1 or playlist_index == -1 or not song_query:
-            messagebox.showerror("Error", "Select user, playlist, and enter song name.")
+        if playlist_index == -1 or not song_query:
+            messagebox.showerror("Error", "Select a playlist and enter song name.")
             return
 
         playlist_id = self.playlists[playlist_index][0]
-        user_folder = os.path.join(DOWNLOAD_DIR, self.users[user_index][1])
+        user_folder = os.path.join(DOWNLOAD_DIR, self.username)
 
-        # Search YouTube
         results = search_youtube(song_query)
         if not results:
             messagebox.showinfo("No Results", "No YouTube videos found.")
             return
         video_url = results[0]['webpage_url']
 
-        # Download song
         metadata = download_youtube_audio(video_url, user_folder)
         song_id = add_song_to_db(
             DB_FILE,
@@ -154,15 +160,19 @@ class MusicDownloaderGUI:
             cover_art=metadata['cover_art']
         )
 
-        # Add to playlist
         success, msg = add_song_to_playlist(playlist_id, song_id)
         if success:
             messagebox.showinfo("Success", f"Downloaded '{metadata['song_name']}' and added to playlist!")
         else:
             messagebox.showerror("Error", msg)
 
-# ----------------- Run App -----------------
+
 if __name__ == "__main__":
+    current_user = get_current_user()
+    if not current_user:
+        tk.messagebox.showerror("Error", "No user logged in!")
+        exit()
+
     root = tk.Tk()
-    app = MusicDownloaderGUI(root)
+    app = MusicDownloaderGUI(root, current_user)
     root.mainloop()
