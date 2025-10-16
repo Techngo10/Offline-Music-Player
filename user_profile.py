@@ -45,7 +45,22 @@ class UserProfileGUI:
         self.user = user
         root.title("User Profile")
         root.attributes('-fullscreen', True)
-        root.config(bg="white")  
+        root.config(bg="white")
+
+        # Frame for close button
+        close_frame = tk.Frame(root, bg="white")
+        close_frame.pack(anchor="ne", padx=20, pady=10)
+        tk.Button(
+            close_frame,
+            text="✖",
+            font=("Arial", 18, "bold"),
+            bg="white",
+            fg="black",
+            bd=0,
+            activebackground="white",
+            activeforeground="red",
+            command=root.destroy
+        ).pack()
 
         frame = tk.Frame(root, padx=50, pady=50, bg="white")
         frame.pack(fill="both", expand=True)
@@ -99,7 +114,6 @@ class UserProfileGUI:
         if filename:
             self.profile_pic_var.set(filename)
 
-
     def save_changes(self):
         first_name = self.first_name_entry.get().strip()
         last_name = self.last_name_entry.get().strip()
@@ -109,6 +123,7 @@ class UserProfileGUI:
 
         update_user_profile(self.user["id"], first_name, last_name, email, phone_no, profile_pic)
         messagebox.showinfo("Success", "Profile updated successfully!")
+
 
 if __name__ == "__main__":
     current_user = get_current_user()

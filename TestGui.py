@@ -1,20 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
-import tkinter as tk
-from tkinter import *
-from tkinter import messagebox
-from tkinter import ttk
-from tkinter import PhotoImage
-from tkinter import Image
+import subprocess
+import sys
 import os
-from tkinter import filedialog
-from PIL import Image, ImageTk
-
-from Classes import Account, User, Playlist
-#from music_player import MusicPlayer
-import sqlite3
-
-DB_FILE = "musicApp.db"
+from user_profile import UserProfileGUI, get_current_user
+from LoginApp import show_login 
 
 # -------------------------------
 # 🏠 MAIN APPLICATION CONTROLLER
@@ -64,8 +54,16 @@ class MainPage(tk.Frame):
                    command=lambda: controller.show_frame(MainPage)).pack(side="left", padx=10, pady=5)
         ttk.Button(top_bar, text="Download",
                    command=lambda: controller.show_frame(DownloadPage)).pack(side="left", padx=10, pady=5)
-        ttk.Button(top_bar, text="Account",
-                   command=lambda: controller.show_frame(AccountPage)).pack(side="left", padx=10, pady=5)
+        ttk.Button(
+            top_bar,
+            text="Account",
+            command=lambda: subprocess.Popen([sys.executable, os.path.join(os.getcwd(), "user_profile.py")])
+        ).pack(side="left", padx=10, pady=5)
+        
+        ttk.Button(top_bar, text="Add Song", command=self.add_song).pack(side="left", padx=10, pady=5)
+
+
+
 
         # --- Main Area ---
         main_content = tk.Frame(self, bg="#202020")
@@ -78,6 +76,14 @@ class MainPage(tk.Frame):
         bottom_bar.pack(side="bottom", fill="x")
         tk.Label(bottom_bar, text="Playback controls will go here",
                  bg="#181818", fg="#B3B3B3", font=("Segoe UI", 10)).pack(pady=10)
+    
+    def add_song(self):
+        script_path = os.path.join(os.getcwd(), "add_song.py")
+        if os.path.exists(script_path):
+            subprocess.Popen([sys.executable, script_path])
+        else:
+            tk.messagebox.showerror("Error", "add_song.py not found!")
+
 
 
 # -------------------------------
@@ -97,145 +103,6 @@ class DownloadPage(tk.Frame):
 
         tk.Label(self, text="⬇️ Download Page (YouTube Downloader Coming Soon)",
                  bg="#121212", fg="white", font=("Segoe UI", 14, "bold")).pack(expand=True)
-
-
-
-____________________________________________
-#I don't know how this fits into the class with the tkinter stuff but here's what was in my file for the downloads page - A :)
-#like the functions and then the window details
-
-    downloaded_ids = []
-
-    def disp_downloaded():
-        DownloadsListbox.delete(0, tk.END)
-    
-    
-        conn = sqlite3.connect(curr_user.db_file)
-        cursor = conn.cursor()
-        cursor.execute("SELECT song_id, song_name FROM songsDownloaded")
-        result = cursor.fetchall()
-        conn.close()
-    
-        if not result:
-            song_name = "No songs"
-            song_id = None
-        else:
-            song_id, song_name = result
-    
-        if result:
-            for song_id, song_name in result:
-                DownloadsListbox.insert(tk.END, f"{song_name}")
-                downloaded_ids.append(song_id)
-        else:
-            DownloadsListbox.insert(tk.END, "No songs downloaded yet")
-    
-    
-    
-    def chooseAPlaylist(event):
-        selection = DownloadsListbox.curselection()
-        if not selection:
-            return
-        index = selection[0]
-        selectedSong = downloaded_ids[index]
-        # selectedSong = the songid of selection
-    
-        playlist_ids = []
-        #needs to show another playlistListbox here that have list of current user's playlists
-        playlistListbox.delete(0, tk.END)
-        playlists = curr_user.viewPlaylists()
-        for playlistID, name in playlists:
-            playlistListbox.insert(tk.END, f"{name}")
-            playlist_ids.append(playlistID)
-    
-        #playlist_id = playlist id of playlistChosen
-    
-        #then show playlists
-        playlistListbox.pack()
-    
-        #add song function
-        playlistChosen = playlistListbox.curselection()
-        if not playlistChosen:
-            return
-        index1 = playlistChosen[0]
-        playlist_id = playlist_ids[index1]
-    
-        pl = Playlist(DB_FILE, playlist_id)
-        pl.addSong(selectedSong)
-    
-    def search(event = None):
-        #this needs to get the input from the enter box, and find the songs with the same name (start with exact same)
-        conn = sqlite3.connect(curr_user.db_file)
-        cursor = conn.cursor()
-        cursor.execute("SELECT song_id, song_name FROM songsDownloaded")
-        data_items = cursor.fetchall()
-        conn.close()
-    
-        if not data_items:
-            song_name = "No songs"
-            song_id = None
-        else:
-            song_id, song_name = data_items
-    
-        if data_items:
-            query = search_var.get().lower()
-            DownloadsListbox.delete(0, tk.END)  # Clear previous results
-    
-            if not query:
-                # If search box is empty, display all items (or nothing)
-                for song_name in data_items:
-                    DownloadsListbox.insert(tk.END, song_name)
-                return
-    
-            found_results = [song_name for song_name in data_items if query in song_name.lower()]
-    
-            if found_results:
-                for song_name in found_results:
-                    DownloadsListbox.insert(tk.END, song_name)
-                    downloaded_ids.append(song_id)
-            else:
-                DownloadsListbox.insert(tk.END, "No results found.")
-    
-        
-    
-    # Tkinter setup 
-    root = tk.Tk()
-    root.title("Downloaded Songs")
-    
-    downloadsTitle = tk.Label(root, text= "Downloaded Songs", font=("Arial", 25, "bold"))
-    downloadsTitle.pack()
-    
-    #have a search bar for songs
-    searchLabel = tk.Label(root, text='Search')
-    searchLabel.pack()
-    e1 = Entry(root)
-    e1.bind("<KeyRelease>", search)
-    e1.pack()
-    search_var = tk.StringVar()
-    tk.Button(root, text="Search", command=search).pack()
-    
-    
-    #display the songs in the playlist in a list
-    DownloadsListbox = tk.Listbox(root, width=50, height=25)
-    DownloadsListbox.bind("<<ListboxSelect>>", chooseAPlaylist)
-    DownloadsListbox.pack()
-    
-    
-    
-    #this needs to appear when a song is selected in downloads listbox, and is given that song's id
-    # Playlist list
-    playlistListbox = tk.Listbox(root, width=20, height=25)
-    #playlistListbox.bind("<<ListboxSelect>>")
-    playlistListbox.pack_forget()
-    
-    disp_downloaded()
-    
-    
-    root.mainloop()
-# Here is the end of my part -A :)
-_________________________________________
-
-
-
 
 
 # -------------------------------
@@ -260,6 +127,13 @@ class AccountPage(tk.Frame):
 # -------------------------------
 # 🧭 START APPLICATION
 # -------------------------------
+
+
 if __name__ == "__main__":
-    app = MusicApp()
-    app.mainloop()
+    user_id = show_login()  # open login window first
+    if user_id:  # login successful
+        app = MusicApp()
+        app.mainloop()
+    else:
+        print("Login cancelled or failed. Exiting...")
+
