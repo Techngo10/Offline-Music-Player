@@ -131,7 +131,7 @@ tk.Button(root, text="Search", command=search).pack()
 
 #display the songs in the playlist in a list
 DownloadsListbox = tk.Listbox(root, width=50, height=25)
-DownloadsListbox.bind("<<ListboxSelect>>", chooseAPlaylist)
+DownloadsListbox.bind("<Button-3>", chooseAPlaylist) #just change listboxselection to button-3 for right click- if doesn't work just change back
 DownloadsListbox.pack()
 
 
