@@ -13,7 +13,7 @@ class MusicApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Offline Music Player")
-        self.geometry("900x600")
+        self.attributes('-fullscreen', True)
         self.configure(bg="#121212")
 
         # Container that holds all pages
@@ -54,12 +54,7 @@ class MainPage(tk.Frame):
                    command=lambda: controller.show_frame(MainPage)).pack(side="left", padx=10, pady=5)
         ttk.Button(top_bar, text="Download",
                    command=lambda: controller.show_frame(DownloadPage)).pack(side="left", padx=10, pady=5)
-        ttk.Button(
-            top_bar,
-            text="Account",
-            command=lambda: subprocess.Popen([sys.executable, os.path.join(os.getcwd(), "user_profile.py")])
-        ).pack(side="left", padx=10, pady=5)
-        
+        ttk.Button(top_bar, text="Account", command=self.open_profile).pack(side="left", padx=10, pady=5)
         ttk.Button(top_bar, text="Add Song", command=self.add_song).pack(side="left", padx=10, pady=5)
 
 
@@ -78,11 +73,20 @@ class MainPage(tk.Frame):
                  bg="#181818", fg="#B3B3B3", font=("Segoe UI", 10)).pack(pady=10)
     
     def add_song(self):
-        script_path = os.path.join(os.getcwd(), "add_song.py")
-        if os.path.exists(script_path):
-            subprocess.Popen([sys.executable, script_path])
-        else:
-            tk.messagebox.showerror("Error", "add_song.py not found!")
+        from add_song import MusicDownloaderGUI  # import the class directly
+
+        add_song_window = tk.Toplevel(self)
+        add_song_window.title("Download & Add Song")
+        add_song_window.geometry("550x400")
+        current_user = get_current_user() 
+        app = MusicDownloaderGUI(add_song_window, current_user)
+    def open_profile(self):
+        profile_window = tk.Toplevel(self)
+        profile_window.title("User Profile")
+        profile_window.geometry("600x500")
+        current_user = get_current_user()
+        UserProfileGUI(profile_window, current_user)  # pass the Toplevel
+
 
 
 

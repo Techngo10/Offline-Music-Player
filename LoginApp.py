@@ -52,13 +52,12 @@ def show_login():
         conn.close()
         if user:
             set_current_user_in_db(user[0])
-            messagebox.showinfo("Welcome", f"Welcome back, {user[1]} {user[2]}!")
         else:
-            messagebox.showerror("Login Failed", "Invalid username or password")
+            messagebox.showerror("Invalid username or password")
 
     login_root = tk.Tk()
     login_root.title("Music App Login")
-    login_root.geometry("420x550")
+    login_root.attributes('-fullscreen', True)  
     login_root.config(bg="white")
 
     # UI elements simplified
