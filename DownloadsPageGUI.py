@@ -116,6 +116,9 @@ def search(event = None):
 root = tk.Tk()
 root.title("Downloaded Songs")
 
+downloadsTitle = tk.Label(root, text= "Downloaded Songs", font=("Arial", 25, "bold"))
+downloadsTitle.pack()
+
 #have a search bar for songs
 searchLabel = tk.Label(root, text='Search')
 searchLabel.pack()
