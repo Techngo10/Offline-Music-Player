@@ -45,7 +45,6 @@ def disp_downloaded():
         DownloadsListbox.insert(tk.END, "No songs downloaded yet")
 
 
-
 def chooseAPlaylist(event):
     selection = DownloadsListbox.curselection()
     if not selection:

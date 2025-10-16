@@ -12,15 +12,6 @@ curr_user = User(DB_FILE, 1)  # testing: assume user 1 is logged in
 class MusicApp:
 
     def __init__(self, root):
-        self.root = root
-        self.root.title("Offline Music Player")
-        self.root.geometry("900x600")
-        self.root.configure(bg="#121212")
-
-        # --- Elijah's Testing ---
-        #self.playlist = choose_folder()  # opens file dialog and gets all songs in a folder
-        self.player = MusicPlayer([])
-        self.current_playlist_paths = []
 
         # We are gonna need to create a local folder, (so a folder on your computer) that stores all downloaded songs
         #and then we can set that as the default music folder for the player (we can either make a thing to create it)
@@ -31,7 +22,17 @@ class MusicApp:
 
         #ok seems we have a downloads folder now, but assuming that the user doesnt we will keep it optional, might need
         #need to add a button that lets user change their download folder or make one
+        # --- Elijah's Testing ---
+        #self.playlist = choose_folder()  # opens file dialog and gets all songs in a folder
 
+        self.root = root
+        self.root.title("Offline Music Player")
+        self.root.geometry("900x600")
+        self.root.configure(bg="#121212")
+
+        self.player = MusicPlayer([])
+        self.current_playlist_paths = []
+        
         # currently selected playlist id
         self.current_playlist_id = None
         self.playlist_ids = []
@@ -251,7 +252,6 @@ class MusicApp:
         pl_name = cursor.fetchone()[0]
         conn.close()
         messagebox.showinfo("Now Playing", f"Playing playlist: {pl_name}")
-
 
     def remove_song(self):
         selection = self.songs_box.curselection()

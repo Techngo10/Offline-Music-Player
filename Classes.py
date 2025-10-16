@@ -215,8 +215,3 @@ class Playlist():
         conn.close()
 
         return songs
-
-
-
-
-
