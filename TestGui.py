@@ -1,11 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-import tkinter as tk
-from tkinter import *
-from tkinter import messagebox
-from tkinter import ttk
-from tkinter import PhotoImage
-from tkinter import Image
+import subprocess
+import sys
 import os
 from tkinter import filedialog
 from PIL import Image, ImageTk
@@ -15,6 +11,8 @@ from musicPlayer import MusicPlayer
 import sqlite3
 
 DB_FILE = "musicApp.db"
+from user_profile import UserProfileGUI, get_current_user
+from LoginApp import show_login 
 
 # -------------------------------
 # 🏠 MAIN APPLICATION CONTROLLER
@@ -23,7 +21,7 @@ class MusicApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Offline Music Player")
-        self.geometry("900x600")
+        self.attributes('-fullscreen', True)
         self.configure(bg="#121212")
 
         # Container that holds all pages
@@ -533,6 +531,13 @@ class AccountPage(tk.Frame):
 # -------------------------------
 # 🧭 START APPLICATION
 # -------------------------------
+
+
 if __name__ == "__main__":
-    app = MusicApp()
-    app.mainloop()
+    user_id = show_login()  # open login window first
+    if user_id:  # login successful
+        app = MusicApp()
+        app.mainloop()
+    else:
+        print("Login cancelled or failed. Exiting...")
+

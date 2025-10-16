@@ -100,7 +100,13 @@ class MusicDownloaderGUI:
 
         self.font_label = ("Arial", 12)
         self.font_button = ("Arial", 11, "bold")
-
+        
+        top_bar = tk.Frame(root, bg="#f0f0f0", height=40)
+        top_bar.pack(side="top", fill="x")
+        exit_button = tk.Button(top_bar, text="✖", font=("Arial", 12, "bold"), fg="red",
+                        bg="#f0f0f0", bd=0, command=root.destroy)
+        exit_button.pack(side="right", padx=10, pady=5)
+    
         main_frame = tk.Frame(root, bg="white")
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -174,5 +180,10 @@ if __name__ == "__main__":
         exit()
 
     root = tk.Tk()
+    root.title("YouTube Music Downloader & Playlist")
+    
+    # Make fullscreen
+    root.attributes('-fullscreen', True)
+
     app = MusicDownloaderGUI(root, current_user)
     root.mainloop()
