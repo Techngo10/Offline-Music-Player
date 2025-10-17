@@ -1,0 +1,47 @@
+Contribution: 
+For this project, my main contributions involved getting started with implementing the fundamental functionality involving downloading music from YouTube, and integrating with user accounts. My contributions include:
+
+YouTube Audio Download script: add_song.py
+    Implemented key logic to search for YouTube videos via yt-dlp and download those videos as MP3s.
+    Devised logic to extract and store metadata (title, uploader, duration, thumbnail) in the SQLite database.
+    Developed a user-specific download directory structure to allow for multiple user accounts.
+    Connected download logic directly to user playlists so that songs could be added while downloading audio.
+
+User Login and Account Management (user_profile.py and LoginApp.py)
+    Developed a login system in LoginApp.py that allows users to register and log in.
+    Ensured that only the current user account would modify the database with an implement of a current_user table.
+    Incorporated account registration validation logic and error handling in order to handle duplicate usernames.
+    Developed the UserProfileGUI interface for users to change profile settings and profile pictures.
+    Coupled the profile modifications and updates to the database, such that users could update their accounts within GUI.
+
+Debugging: 
+    Majority of the debugging of the functionality in mainFinal.py
+    There was issues of file paths. Elijah was downloading them but not writting file names to database
+    Issues with multiple downloads, calling yt-dlp and downloading entire playlist causing blocking operations
+    Issue with clicking on screen to show all the playlist, when you first logged in nothing would show cause no playlist were There
+    Due to the integration issue with me and ELijah where I stored mine as sub folders under the downloads and he stored them whereever the user wanted to, the forward, backwards, logic didn't work. Rewrote that logic
+    Wrote the readme and handled other bug issues such as Amelia's comments breaking the DB since  SQLite does not support # or // for comments inside SQL statements. Only -- (single-line) or /* ... */ (multi-line) work
+
+Learning Experience: 
+- Dificulty in integrating different components. 
+    For example, Elijah implemented flexible file storage (users could pick a folder), while I implemented a centralized downloads/ folder with subfolders per user. Integrating my part required me to update all the helper funciton which we could have avoided
+- understanding of Tkinter GUI development
+    It's really similar to what we did for web dev with html and the classes like .button were also really similar
+    layout management, event handling, and connecting UI elements to backend logic.
+    nice refresher of web dev contents
+- Handle edge cases that I didn't think of: 
+    multiple covers and song of the same names
+    duplicate song checks, empty playlist handling
+- Managing external library quirks: 
+    Working with yt-dlp exposed me to the challenges of using third-party libraries
+    I didn't know why but you have to pass the playlist false param, i was wondering why it was downloading for like 10 minutes when I entered a singular link
+    you have to extract the metadata and etc
+
+
+Reflection: 
+- Doing this project gave me with practical experience in developing a  Python application that had a GUI, a database, and used external APIs (YouTube via yt-dlp).
+- I learned how to manage and record the user's specific data and to handle multiple users, including database changes and directory-level changes.
+- Debugging also revealed the challenges of managing GUI clicking events in relation to the backend process (for example, the app downloading multiple videos in the background while the application remained usable).
+- By working with a GUI, I learned the value of mockups; there's no way to explain an interface to teammates verbally, and there was so much confusion who was working what and what needed to be done
+- Working with others on a project improved my overall problem-solving, especially debugging asynchronous code, and making sure users' actions would cause the database to update.
+- I've never written a full application with python before and this helped me learn a lot about it, how to write front-ends and back-ends that work together, and anticipate potential user issues in a GUI environment.

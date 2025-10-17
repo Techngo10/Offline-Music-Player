@@ -7,7 +7,7 @@ cursor = conn.cursor()
 cursor.execute("PRAGMA foreign_keys = ON")
 
 cursor.execute("""
-    CREATE TABLE IF NOT EXISTS current_user ( #current use tracks who is currently logged in
+    # CREATE TABLE IF NOT EXISTS current_user ( #current use tracks who is currently logged in
         user_id INTEGER UNIQUE,
         FOREIGN KEY(user_id) REFERENCES users(user_id) #points to the user_id in the users table
     )
