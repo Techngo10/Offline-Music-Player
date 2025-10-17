@@ -85,7 +85,7 @@ class MainPage(tk.Frame):
         tk.Label(top_bar, text="🎵 Offline Music Player", fg="white", bg="#181818",
                  font=("Segoe UI", 12, "bold")).pack(side="left", padx=12)
         ttk.Button(top_bar, text="Home", command=lambda: controller.show_frame(MainPage)).pack(side="left", padx=6, pady=10)
-        ttk.Button(top_bar, text="Download", command=lambda: controller.show_frame(DownloadPage)).pack(side="left", padx=6)
+        # ttk.Button(top_bar, text="Download", command=lambda: controller.show_frame(DownloadPage)).pack(side="left", padx=6)
         ttk.Button(top_bar, text="Account", command=self.open_user_profile).pack(side="left", padx=6)
 
         # Main content area (3 columns)
@@ -123,15 +123,16 @@ class MainPage(tk.Frame):
         ttk.Button(controls_frame, text="🗑 Delete Playlist", command=self.delete_playlist).pack(fill="x", padx=8, pady=4)
         ttk.Button(controls_frame, text="▶ Play Playlist", command=self.play_playlist).pack(fill="x", padx=8, pady=8)
         ttk.Separator(controls_frame, orient="horizontal").pack(fill="x", padx=8, pady=8)
-        ttk.Button(controls_frame, text="+ Add Song (pick file)", command=self.add_song_file_to_db).pack(fill="x", padx=8, pady=4)
-        ttk.Button(controls_frame, text="❌ Remove Song", command=self.remove_song).pack(fill="x", padx=8, pady=4)
-        ttk.Button(controls_frame, text="📷 Add Cover", command=self.add_playlist_cover).pack(fill="x", padx=8, pady=4)
-        ttk.Button(controls_frame, text="🖼 Remove Cover", command=self.delete_playlist_cover).pack(fill="x", padx=8, pady=4)
+        # ttk.Button(controls_frame, text="+ Add Song (pick file)", command=self.add_song_file_to_db).pack(fill="x", padx=8, pady=4)
         ttk.Button(
             controls_frame,
-            text="Download 2",
+            text="Download song",
             command=self.run_add_song_script
         ).pack(fill="x", padx=8, pady=4)
+        # ttk.Button(controls_frame, text="❌ Remove Song", command=self.remove_song).pack(fill="x", padx=8, pady=4)
+        ttk.Button(controls_frame, text="📷 Add Cover", command=self.add_playlist_cover).pack(fill="x", padx=8, pady=4)
+        ttk.Button(controls_frame, text="🖼 Remove Cover", command=self.delete_playlist_cover).pack(fill="x", padx=8, pady=4)
+ 
 
         
         # cover thumbnail
@@ -164,15 +165,19 @@ class MainPage(tk.Frame):
 
 
         # volume placeholder
-        volume_frame = tk.Frame(bottom_bar, bg="#181818")
-        volume_frame.grid(row=0, column=2, sticky="e", padx=16)
-        tk.Label(volume_frame, text="🔊", fg="white", bg="#181818").pack(side="left")
-        ttk.Scale(volume_frame, from_=0, to=100, orient="horizontal", length=120).pack(side="left", padx=8)
+        # volume_frame = tk.Frame(bottom_bar, bg="#181818")
+        # volume_frame.grid(row=0, column=2, sticky="e", padx=16)
+        # tk.Label(volume_frame, text="🔊", fg="white", bg="#181818").pack(side="left")
+        # ttk.Scale(volume_frame, from_=0, to=100, orient="horizontal", length=120).pack(side="left", padx=8)
 
         # initial population
         self.disp_playlists()
 
     # -------------------- Playlist UI / DB Functions -------------------- #
+    def on_volume_change(self, val):
+        volume = float(val) / 100  # convert 0-100 to 0.0-1.0
+        self.player.set_volume(volume)
+    
     def pause_song(self):
         if self.player.playlist:
             self.player.pause()  
@@ -219,10 +224,12 @@ class MainPage(tk.Frame):
         for pid, name in playlists:
             self.playlist_box.insert(tk.END, name)
             self.playlist_ids.append(pid)
-        # Auto-select first playlist if available
+        # Auto-select first playlist after widget fully rendered
         if self.playlist_ids:
             self.playlist_box.selection_set(0)
-            self.show_playlist_songs()
+            # Schedule the update to happen after Tkinter mainloop starts
+            self.after(100, self.show_playlist_songs)
+
 
     def create_playlist(self):
         """
@@ -342,9 +349,15 @@ class MainPage(tk.Frame):
             messagebox.showwarning("Missing file", "File missing on disk:\n" + song_path)
             return
 
-        self.player.playlist = [song_path]
-        self.player.current_index = 0
+        if not self.current_playlist_paths:
+            messagebox.showwarning("Empty", "No songs in the playlist.")
+            return
+
+        self.player.playlist = self.current_playlist_paths
+        self.player.current_index = idx
         self.player.play()
+        self.update_song_info(self.current_playlist_paths[idx])
+
         self.update_song_info(song_path)
 
 
@@ -435,7 +448,10 @@ class MainPage(tk.Frame):
         if not self.current_playlist_id:
             messagebox.showwarning("Oops", "Select a playlist first")
             return
-        file_path = filedialog.askopenfilename(title="Select Cover Image", filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.gif")])
+        file_path = filedialog.askopenfilename(
+            title="Select Cover Image",
+            filetypes=[("Images", "*.png *.jpg *.jpeg *.gif")]
+        )
         if not file_path:
             return
         pl = Playlist(DB_FILE, self.current_playlist_id)

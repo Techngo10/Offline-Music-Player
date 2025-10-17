@@ -11,6 +11,7 @@ class MusicPlayer:
         pygame.mixer.init()
         self.playlist = playlist
         self.current_index = 0
+        self.volume = 0.5 
         self.is_paused = False
         self.loop = False
         self.shuffle = False
@@ -31,6 +32,12 @@ class MusicPlayer:
             print(f"🎵 Now playing: {os.path.basename(song)}")
         except pygame.error as e:
             print(f"⚠️ Could not play {song}: {e}")
+            
+    def set_volume(self, vol: float):
+        """Set volume: vol should be 0.0 - 1.0"""
+        self.volume = max(0.0, min(1.0, vol))
+        pygame.mixer.music.set_volume(self.volume)
+        print(f"🔊 Volume set to {int(self.volume*100)}%")
 
     def pause(self):
         """Pause current song."""
