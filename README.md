@@ -1,8 +1,19 @@
 # Offline-Music-Player
 
+Team "Go easy on the marking 🫵"
+Phuc Nguyen - a1911667
+Elijah Ngo - a1924791
+Amelia Fule - a1886839
+
+Offline youtube music player
+You enter a music video title and you can download it offline using youtube to mp3 APIs coded in python
+you can create different playlists and assign a art cover
 A simple offline music player built in Python using `pygame`.  
 Utilizes yt-dlp libary to download mp3 files from youtube, aimed at people who like songs exclusive to youtube and want to save them
 Supports play, pause, next/previous track, cover art, and user accounts.
+
+Existing attempts: https://github.com/lyswhut/lx-music-desktopLinks to an external site. but that the audio are from local files, but our idea is to pull it from youtube videos instead
+Saves permanently locally with different accounts 
 
 ## About Repository Structure
 
