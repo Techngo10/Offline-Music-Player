@@ -21,7 +21,7 @@ Offline-Music-Player/
 ├── musicApp.db                # SQLite database file (created after running Databases.py).
 ├── README.md                  # This file.
 
-
+```
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
