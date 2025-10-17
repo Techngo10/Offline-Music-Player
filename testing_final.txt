@@ -1,0 +1,198 @@
+====================================
+OFFLINE MUSIC PLAYER - TEST PLAN
+====================================
+Author: Elijah Ngo
+Date: 17/10/2025
+Purpose: 
+To verify that the GUI, playback system, and playlist management features 
+of the Offline Music Player function correctly and meet user expectations.
+
+------------------------------------
+1. ENVIRONMENT SETUP
+------------------------------------
+- OS: Windows 11
+- Python version: 3.13.3
+- Dependencies:
+  • tkinter
+  • pygame
+  • yt_dlp
+  • sqlite3
+  • ffmpeg (added to PATH)
+- Database file: musicApp.db
+- Test songs stored in /downloads/tests
+
+Initial issues:
+- yt_dlp required ffmpeg and ffprobe not found (fixed by installing ffmpeg and adding to PATH)
+- Some missing attributes like `curr_user.username` (fixed by adding username property in User class)
+- Circular imports were avoided by separating classes into dedicated files
+
+All dependencies verified after fixes.
+
+------------------------------------
+2. GUI TESTING & LAYOUT
+------------------------------------
+Objective: Ensure all visual elements render and interact correctly.
+
+[2.1] Application Launch
+Result (Initial Test):
+- ❌ Crash due to undefined variable `files` in `self.player.playlist = files`
+Fix:
+- Replaced with properly scoped variable inside file selection method.
+
+Result (Retest):
+- ✅ App runs smoothly, shows main window titled “Offline Music Player”.
+- GUI displays three panels: YouTube Downloader, Downloaded Songs, and Playlist Manager.
+
+[2.2] Window Layout and Responsiveness
+- Tested resizing window between 900x500 and full screen.
+Result:
+- ✅ Layout adapts well, columns stay aligned.
+- Buttons keep spacing and margins intact.
+
+[2.3] Label Updates
+- Initially song info labels (“Song Title”, “Artist Name”) didn’t update after switching songs.
+Fix:
+- Added `update_song_info()` method triggered whenever `next_song()` or `previous_song()` is called.
+Result:
+- ✅ Labels update correctly now.
+
+------------------------------------
+3. DOWNLOAD & FOLDER TESTS
+------------------------------------
+[3.1] Folder Selection
+Test:
+- Clicked “Select Folder”, chose `/downloads/tests`.
+Result:
+- ✅ Path displayed correctly under button.
+
+[3.2] YouTube Download
+Test:
+- Entered “lofi hip hop beats”.
+Result (Initial):
+- ❌ Download failed due to missing ffmpeg (yt_dlp postprocessing error).
+Fix:
+- Installed ffmpeg, verified with `ffmpeg -version` in terminal.
+
+Result (Retest):
+- ✅ Download completes, progress bar updates live.
+- File saved to chosen folder.
+
+[3.3] Auto Refresh Download List
+Test:
+- Downloaded 2 songs back-to-back.
+Result (Initial):
+- ❌ List did not refresh automatically.
+Fix:
+- Added `refresh_downloads()` call at end of download thread.
+Result (Retest):
+- ✅ Downloaded songs now appear instantly in “Downloaded Songs” column.
+
+------------------------------------
+4. PLAYBACK FUNCTIONALITY TESTS
+------------------------------------
+Objective: Verify all player functions: play, pause, resume, next, prev.
+
+[4.1] Play / Pause
+Test:
+- Selected downloaded track, clicked “Play”.
+Result:
+- ✅ Song starts, plays smoothly.
+- ✅ “Pause” button toggles correctly and resumes when clicked again.
+
+[4.2] Next Song
+Result (Initial):
+- ❌ Clicking “Next” stopped playback but didn’t play next track.
+Fix:
+- Missing `self.play()` call after updating `current_index`.
+Result (Retest):
+- ✅ Works fine, next song auto-plays.
+
+[4.3] Previous Song
+Result:
+- ✅ Goes back one song, or loops if first track is reached.
+
+[4.4] Loop and Shuffle Toggles
+Test:
+- Enabled loop and shuffle modes.
+Result:
+- ✅ Shuffle randomizes song order.
+- ✅ Loop repeats current song.
+
+------------------------------------
+5. DATABASE TESTS
+------------------------------------
+[5.1] Playlist Creation
+Test:
+- Created new playlist and added 3 songs.
+Result:
+- ✅ “New Playlist #4” created in DB with correct user_id.
+
+[5.2] Song Linking
+Query:
+`SELECT * FROM playlist_songs;`
+Result:
+- ✅ All added songs linked properly.
+- ❌ Found duplicate song_id once (user double-clicked button).
+Fix:
+- Disabled “Add to Playlist” button temporarily during database insert.
+
+[5.3] Playlist Rename
+Test:
+- Renamed “New Playlist #4” to “Chill Beats”.
+Result:
+- ✅ Updated successfully in both UI and database.
+
+------------------------------------
+6. ERROR HANDLING
+------------------------------------
+[6.1] Invalid YouTube Search
+Test:
+- Input: “qwertyasdfgh”.
+Result:
+- ✅ Displays messagebox “No results found”.
+
+[6.2] No Folder Selected
+Test:
+- Tried downloading before selecting folder.
+Result:
+- ✅ Displays error “Please select a download folder first.”
+
+[6.3] Adding Song Without Selecting Playlist
+Test:
+- Selected a downloaded song, didn’t choose playlist.
+Result:
+- ✅ Message “Select a playlist first” appears.
+
+------------------------------------
+7. USER EXPERIENCE REVIEW
+------------------------------------
+✅ Simple, clean layout — intuitive to use.
+✅ Progress feedback during downloads improves clarity.
+✅ Buttons have visual response, reducing confusion.
+⚠️ Minor lag during large downloads but acceptable for project scope.
+✅ App feels complete and ready for use.
+
+------------------------------------
+8. SUMMARY
+------------------------------------
+Bugs fixed during testing:
+- Undefined variable (`files`)
+- ffmpeg missing (caused yt_dlp failure)
+- Playlist songs not refreshing
+- Labels not updating on song change
+- Duplicate song entries on double-click
+
+All core features now fully functional:
+- GUI rendering & navigation
+- YouTube downloading with progress bar
+- Folder selection persistence
+- Song playback, next/prev controls
+- Playlist management (create, add, rename, delete)
+- SQLite database integrity verified
+
+Final result: ✅ PASS
+Project meets criteria for accessibility, usability, and extendability.
+
+====================================
+END OF TEST PLAN
+====================================

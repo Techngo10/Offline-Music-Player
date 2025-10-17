@@ -1,0 +1,96 @@
+testing_log.txt
+
+-------------------------------------------------------------------------------
+Week 1.1 – Initial Setup & Tkinter Testing
+Started testing early GUI prototypes today. The main window loaded fine, but the buttons didn’t trigger anything yet. Tried linking the play/pause functions to dummy print statements just to confirm event binding worked — it did.
+Ran into a problem where the app froze whenever I clicked a button. Turned out I was calling the function instead of passing a reference (command=play() instead of command=play). Fixed it and re-ran, all good.
+
+Also tested resizing — the window wasn’t scaling properly because I forgot to use .pack(fill="both", expand=True). Added that and layout looks cleaner.
+
+
+Week 1.2 – Local Folder and Playback
+Tested folder selection for loading songs. Used filedialog.askdirectory() and verified that .mp3 files in the folder appeared in the playlist.
+At first, it crashed when selecting an empty folder — fixed that by adding a simple if files: check before populating the list.
+
+Playback testing: used pygame.mixer for audio. Sometimes it wouldn’t stop the current track before playing the next one. Added a mixer.music.stop() before mixer.music.load() and re-tested. Works fine now.
+
+Also noticed clicking “Next” twice too quickly caused a crash (“mixer not initialized”). Probably due to race condition — added a short try/except to handle it gracefully.
+
+-------------------------------------------------------------------------------
+
+Week 2.1 – Playlist and Auto Refresh Testing (Group)
+We tested playlist creation and selection together. Initially, playlist dropdown didn’t update until restart — realised we forgot to refresh the OptionMenu variable.
+We rewrote it to rebuild the menu each time a new playlist is created. That fixed it.
+
+Group testing also found that songs added to playlists were sometimes duplicated. I added a check before appending:
+
+if song not in playlist:
+    playlist.append(song)
+
+
+That solved the duplication issue.
+
+-------------------------------------------------------------------------------
+
+Week 3.1 – YouTube Downloader Integration
+Started testing the YouTube audio download section. Using yt_dlp worked fine in isolation, but inside Tkinter it kept throwing a “no module named yt_dlp” error.
+Installed it using pip install yt-dlp, re-ran, and confirmed it downloaded .webm files correctly.
+
+Then I realised ffmpeg was needed for conversion. The error said:
+
+ERROR: Postprocessing: ffprobe and ffmpeg not found
+
+Spent like half an hour trying to fix it — finally downloaded ffmpeg manually, extracted it, and added the path to system environment variables. Restarted terminal and tested with ffmpeg -version to confirm it worked.
+
+After that, downloads converted perfectly to .mp3 and auto-saved to the default folder.
+
+
+Week 3.2 – GUI Column Layout (YouTube / Downloads / Playlist)
+Reworked the GUI into 3 columns after feedback. I tested each section separately:
+
+Left column: YouTube input + download button + folder selection
+
+Middle column: Downloaded songs list
+
+Right column: Playlist manager
+
+Had some layout overlap issues because I used .pack() in all three — switched to .grid() and used consistent padding/margins. Fixed alignment.
+
+During testing, download progress bar didn’t update smoothly — turns out I forgot to call root.update_idletasks() inside the thread. Added that and now the progress bar moves in real time. Looks great.
+
+Week 3.3 – Final Functional Testing
+Did a full end-to-end run:
+
+Selected folder ✅
+
+Downloaded YouTube audio ✅
+
+Added song to playlist ✅
+
+Played / paused / skipped songs ✅
+
+Changed playlist ✅
+
+Also tested edge cases:
+
+Attempting to play with an empty playlist → now shows “No songs available” popup.
+
+Downloading without selecting folder → added an error message so users know they need to choose one first.
+
+Minor bug fixed: filenames with special characters (like “/” or “|”) broke downloads. Wrapped filename sanitization in:
+
+re.sub(r'[\\/*?:"<>|]', "_", title)
+
+
+Week 4.1 – Final Debugging & Cleanup
+We ran through tests again as a group, trying to break things. Everything seemed stable.
+Small UI polish: added scrollbar to song list, and disabled buttons when no song is loaded.
+
+Also tested on another PC — initially crashed because ffmpeg wasn’t on PATH. Added a setup note in the README to remind users to install ffmpeg manually if missing.
+
+All features confirmed working after final test:
+✅ Folder selection
+✅ YouTube audio downloads
+✅ Progress bar
+✅ Local playback (play/pause/next/prev)
+✅ Playlist creation and switching
