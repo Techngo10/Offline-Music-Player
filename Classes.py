@@ -50,7 +50,7 @@ class Account: #the account class contains all the functions for regarding the a
     
 
 class User(Account): #this class contains the functions for relating to the user
-    def __init__(self, db_file, userID): //so that we can be referencing these basic things that it needs easily
+    def __init__(self, db_file, userID): #so that we can be referencing these basic things that it needs easily
         self.db_file = db_file
         self.user_id = userID #this updates to the userID of whoever is logged in
 
