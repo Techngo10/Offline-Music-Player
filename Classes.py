@@ -1,13 +1,15 @@
 import sqlite3
 
 
-class Account: 
+class Account: #the account class contains all the functions for regarding the account details
     # put what is inside Account here
-    def login(db_file, input_username, input_password):
+    def login(db_file, input_username, input_password): #this function takes the database and the user's input and finds if the password is 
+        #correct and if so, it sets the user_id to the curr_user (current user)
         #put function implementation here
-        conn = sqlite3.connect(db_file)
+        conn = sqlite3.connect(db_file) #connect to the database
         cursor = conn.cursor()
 
+        #from database get the user id and the password from the users table for the input that was entered
         cursor.execute("""SELECT user_id, password FROM users WHERE username = ?""", (input_username,))
         result = cursor.fetchone()
 
@@ -15,12 +17,12 @@ class Account:
             # Username not found
             conn.close()
             return None, "Username or password is incorrect. Do you want to create an account?"
-            #go to create account if yes
+            #go to create account if yes (add later as an extention if time)
 
         user_id, stored_password = result
          
         
-        if stored_password == input_password:
+        if stored_password == input_password: #if the entered password is the password in the database for the username
             #update currUser
             conn.close()
             return User(db_file, user_id), "Login successful!" #now logged in
@@ -31,9 +33,9 @@ class Account:
 
         
 
-    def createNewAccount(db_file, firstName, lastName, email, username, password):
+    def createNewAccount(db_file, firstName, lastName, email, username, password): #create a new account with the input details
         #put function implementation here
-        conn = sqlite3.connect(db_file)
+        conn = sqlite3.connect(db_file) #access database 
         cursor = conn.cursor()
 
         cursor.execute("""INSERT INTO users (first_name, last_name, email, username, password) VALUES (?, ? , ?, ?, ?)""", (firstName, lastName, email, username, password,)) #put each value in database tables - new entries
@@ -47,21 +49,20 @@ class Account:
         return User(db_file, newUserID), "Account created"
     
 
-
-class User(Account):
-    def __init__(self, db_file, userID):
+class User(Account): #this class contains the functions for relating to the user
+    def __init__(self, db_file, userID): //so that we can be referencing these basic things that it needs easily
         self.db_file = db_file
         self.user_id = userID #this updates to the userID of whoever is logged in
 
     # put what is inside User here
-    def logout(self):
+    def logout(self): #logsout current user by setting the current user to 0
         #put function implementation here
         #go to logged out page, remove current user
         currUser = 0 #not a valid number therefore no one is logged in
         return 0 #no one is logged in anymore
         
 
-    def viewPlaylists(self):
+    def viewPlaylists(self): #goes into the database and finds the playlists for the current user and returns them all
         #put function implementation here
         #list the playlists
         conn = sqlite3.connect(self.db_file)
@@ -76,7 +77,7 @@ class User(Account):
         return result
         
         
-    def createNew(self, firstSong): 
+    def createNew(self, firstSong): #this creates a new playlist with the user's id and the selected song's id
         #put function implementation here
         #create new playlist with name being its id
         #add firstSong to playlist
@@ -98,7 +99,7 @@ class User(Account):
         return newPlaylistID
 
 
-    def changeProfilePic(self, newPic):
+    def changeProfilePic(self, newPic): #this takes the new photos path and replaces it in the database from the old one/puts it in for start
         #put function implementation here
         #to add or change their pfp
         conn = sqlite3.connect(self.db_file)
@@ -110,7 +111,8 @@ class User(Account):
         conn.close()
         return True, "new profile pic updated!"
         
-    def addOrChangePhone(self, phoneNo):
+    def addOrChangePhone(self, phoneNo): #possible extension function that I wrote anyway, but like isn't integral to the app's functionality
+        #it just takes an entered phone number and puts it in the database for the user id
         #put function implementation here
         #because it's optional to add, and don't at the sign up
         conn = sqlite3.connect(self.db_file)
@@ -124,13 +126,13 @@ class User(Account):
 
 
     
-class Playlist():
+class Playlist(): #this class contains the functionality to do with the playlists
     # put what is inside Playlist here
-    def __init__(self, db_file, playlist_id):
+    def __init__(self, db_file, playlist_id): #so can reference the current playlist id easier
         self.db_file = db_file
         self.playlist_id = playlist_id
 
-    def addSong(self, selectedSong):
+    def addSong(self, selectedSong): //adds a selected song to selected playlist by using the ids and puts it into the database
         #put function implementation here
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -141,7 +143,7 @@ class Playlist():
         conn.close()
         return True, "song added"
 
-    def removeSong(self, targetSong):
+    def removeSong(self, targetSong): #takes the chosen song and the current playlist and finds the occurence of it in the playlist in the database and removes it
         #put function implementation here
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -153,7 +155,7 @@ class Playlist():
         return True, "song removed"
 
 
-    def changePlaylistName(self, newPlaylistName):
+    def changePlaylistName(self, newPlaylistName): #takes input and changes the chosen playlists name to that input with the database
         #put function implementation here
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -165,7 +167,7 @@ class Playlist():
         return True, "playlist name changed"
 
 
-    def deletePlaylist(self):
+    def deletePlaylist(self): #deletes the chosen playlist completely from the database, which means everything contained within it too like the song ids, but not that actual songs to be clear
         #put function implementation here
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -180,7 +182,7 @@ class Playlist():
         return True, "playlist deleted"
 
 
-    def uploadCover(self, coverImage):
+    def uploadCover(self, coverImage): #takes the path to the cover image and inserts it into the database for the user id so that will be accessed to display it in the gui
         #put function implementation here
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -192,7 +194,7 @@ class Playlist():
         return True, "Cover image uploaded!"
 
 
-    def removeCover(self):
+    def removeCover(self): #deletes cover in the current playlist in the database
         #put function implementation here
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
@@ -205,7 +207,7 @@ class Playlist():
 
 
     
-    def viewSongs(self):
+    def viewSongs(self): #this takes the playlist and finds all the details for each of the songs in the database for that playlist and returns them, by using the playlist id, and then those can be displayed
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
