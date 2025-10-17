@@ -4,6 +4,9 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
+import subprocess
+import sys
+from LoginApp import show_login
 
 from Classes import User, Playlist
 from musicPlayer import MusicPlayer
@@ -11,16 +14,22 @@ from musicPlayer import MusicPlayer
 DB_FILE = "musicApp.db"
 # testing: assume user 1 is logged in (you can change as needed)
 curr_user = User(DB_FILE, 1)
+DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
+
+# Ensure the folder exists
+if not os.path.exists(DOWNLOAD_DIR):
+    os.makedirs(DOWNLOAD_DIR)
 
 
 # -------------------------------
 # 🏠 MAIN APPLICATION CONTROLLER
 # -------------------------------
 class MusicApp(tk.Tk):
-    def __init__(self):
+    def __init__(self, curr_user):
         super().__init__()
+        self.curr_user = curr_user
         self.title("Offline Music Player")
-        self.geometry("1000x680")
+        self.attributes('-fullscreen', True)
         self.configure(bg="#121212")
 
         container = tk.Frame(self, bg="#121212")
@@ -48,7 +57,7 @@ class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#121212")
         self.controller = controller
-
+        self.curr_user = controller.curr_user 
         # Music player instance (start empty)
         self.player = MusicPlayer([])
 
@@ -75,7 +84,7 @@ class MainPage(tk.Frame):
                  font=("Segoe UI", 12, "bold")).pack(side="left", padx=12)
         ttk.Button(top_bar, text="Home", command=lambda: controller.show_frame(MainPage)).pack(side="left", padx=6, pady=10)
         ttk.Button(top_bar, text="Download", command=lambda: controller.show_frame(DownloadPage)).pack(side="left", padx=6)
-        ttk.Button(top_bar, text="Account", command=lambda: controller.show_frame(AccountPage)).pack(side="left", padx=6)
+        ttk.Button(top_bar, text="Account", command=self.open_user_profile).pack(side="left", padx=6)
 
         # Main content area (3 columns)
         main_frame = tk.Frame(self, bg="#121212")
@@ -154,6 +163,10 @@ class MainPage(tk.Frame):
         self.disp_playlists()
 
     # -------------------- Playlist UI / DB Functions -------------------- #
+    def open_user_profile(self):
+        # Make sure it runs with the same Python interpreter
+        subprocess.Popen([sys.executable, "user_profile.py"])
+
     def disp_playlists(self):
         self.playlist_box.delete(0, tk.END)
         self.playlist_ids = []
@@ -505,14 +518,32 @@ class DownloadPage(tk.Frame):
                 "format": "bestaudio/best",
                 "outtmpl": os.path.join(user_folder, "%(title)s.%(ext)s"),
                 "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}],
+                "final_ext": "mp3",
                 "quiet": True,
-                "no_warnings": True
+                "no_warnings": True,
+                "noplaylist": True,
             }
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.download([url])
                 messagebox.showinfo("Download Complete", f"Audio downloaded to:\n{user_folder}")
                 self.populate_downloads()
+                # Find the newest downloaded file
+                latest_file = max(
+                    [os.path.join(user_folder, f) for f in os.listdir(user_folder)],
+                    key=os.path.getctime
+                )
+                song_name = os.path.splitext(os.path.basename(latest_file))[0]
+
+                # Insert into songsDownloaded table
+                conn = sqlite3.connect(DB_FILE)
+                c = conn.cursor()
+                c.execute("""
+                    INSERT INTO songsDownloaded (song_name, artist_name, file_path)
+                    VALUES (?, ?, ?)
+                """, (song_name, None, latest_file))
+                conn.commit()
+                conn.close()
             except Exception as e:
                 messagebox.showerror("Download Error", str(e))
 
@@ -603,5 +634,10 @@ class AccountPage(tk.Frame):
 # 🧭 START APPLICATION
 # -------------------------------
 if __name__ == "__main__":
-    app = MusicApp()
-    app.mainloop()
+    user_id = show_login()  # show login first
+    if user_id:  # login successful
+        curr_user = User(DB_FILE, user_id)
+        app = MusicApp(curr_user)
+        app.mainloop()
+    else:
+        print("Login failed or cancelled. Exiting.")

@@ -33,7 +33,7 @@ cursor.execute("""
     song_name TEXT,
     album_name TEXT,
     lyrics TEXT,
-    length REAL
+    length REAL,
     file_path TEXT,
     cover_art TEXT
     )
