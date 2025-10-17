@@ -4,8 +4,9 @@ A simple offline music player built in Python using `pygame`.
 Utilizes yt-dlp libary to download mp3 files from youtube, aimed at people who like songs exclusive to youtube and want to save them
 Supports play, pause, next/previous track, cover art, and user accounts.
 
-About Repository structure: 
-'''
+## About Repository Structure
+
+```text
 Offline-Music-Player/
 ├── Classes.py                 # Defines the core classes: User and Playlist. Handles all DB operations for users, playlists, and songs.
 ├── Databases.py               # Initializes the SQLite database and creates all required tables.
@@ -14,12 +15,13 @@ Offline-Music-Player/
 ├── musicPlayer.py             # Implements the low-level music player functionality (play, pause, next, previous, volume).
 ├── DownloadsPageGUI.py        # GUI logic for the download page, including adding songs to playlists.
 ├── user_profile.py            # GUI for displaying and managing the current user’s profile.
-├── mainFinal.py / gui_combined.py  # Optional/main testing scripts combining different GUI components.
+├── mainFinal.py / gui_combined.py  # Main script combining different GUI components.
 ├── requirements.txt           # Lists all Python dependencies needed to run the project.
 ├── downloads/                 # Folder where downloaded audio files are stored.
 ├── musicApp.db                # SQLite database file (created after running Databases.py).
 ├── README.md                  # This file.
-'''
+
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
