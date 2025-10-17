@@ -1,13 +1,11 @@
-#This file creates the database for the music player system
 import sqlite3
 
-# Create User table
-conn = sqlite3.connect("musicApp.db") #these few lines create the musicApp database which everything is stored in for the music player app
+conn = sqlite3.connect("musicApp.db") 
 cursor = conn.cursor()
 cursor.execute("PRAGMA foreign_keys = ON")
 
 cursor.execute("""
-    # CREATE TABLE IF NOT EXISTS current_user ( /*current use tracks who is currently logged in*/
+    CREATE TABLE IF NOT EXISTS current_user ( /*current use tracks who is currently logged in*/
         user_id INTEGER UNIQUE,
         FOREIGN KEY(user_id) REFERENCES users(user_id) /*points to the user_id in the users table*/
     )
@@ -26,7 +24,6 @@ cursor.execute("""
     )
     """)
 
-# Create songs downloaded table
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS songsDownloaded ( /*this is a table of all the songs that have been downloaded into the system*/
     song_id INTEGER PRIMARY KEY AUTOINCREMENT, /*have a unique id so that each song can be easily referenced in other tables and easily accessed*/
@@ -40,7 +37,6 @@ cursor.execute("""
     )
     """)
 
-# Create playlist table
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS playlist ( /*playlist table, which stores the details of each playlist that is created*/
     playlist_id INTEGER PRIMARY KEY AUTOINCREMENT, /*unique id for each playlist which can be used to reference a specific playlist*/
@@ -53,7 +49,6 @@ cursor.execute("""
     """)
 
 
-# create playlist songs table 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS playlist_songs ( /*this table stores the references for the songs that are in playlists, and which playlists they are in*/
     playlist_id INTEGER, /*have a foreign key to the playlist table and the id stored in there so that the with the song_id in this table it can be seen which song belongs to which playlist*/

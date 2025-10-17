@@ -132,8 +132,7 @@ class Playlist(): #this class contains the functionality to do with the playlist
         self.db_file = db_file
         self.playlist_id = playlist_id
 
-    def addSong(self, selectedSong): //adds a selected song to selected playlist by using the ids and puts it into the database
-        #put function implementation here
+    def addSong(self, selectedSong): 
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
