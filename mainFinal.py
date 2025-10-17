@@ -4,6 +4,11 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
+import subprocess
+import sys
+from LoginApp import show_login
+import threading
+
 
 from Classes import User, Playlist
 from musicPlayer import MusicPlayer
@@ -11,16 +16,22 @@ from musicPlayer import MusicPlayer
 DB_FILE = "musicApp.db"
 # testing: assume user 1 is logged in (you can change as needed)
 curr_user = User(DB_FILE, 1)
+DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
+
+# Ensure the folder exists
+if not os.path.exists(DOWNLOAD_DIR):
+    os.makedirs(DOWNLOAD_DIR)
 
 
 # -------------------------------
 # 🏠 MAIN APPLICATION CONTROLLER
 # -------------------------------
 class MusicApp(tk.Tk):
-    def __init__(self):
+    def __init__(self, curr_user):
         super().__init__()
+        self.curr_user = curr_user
         self.title("Offline Music Player")
-        self.geometry("1000x680")
+        self.attributes('-fullscreen', True)
         self.configure(bg="#121212")
 
         container = tk.Frame(self, bg="#121212")
@@ -48,7 +59,7 @@ class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#121212")
         self.controller = controller
-
+        self.curr_user = controller.curr_user 
         # Music player instance (start empty)
         self.player = MusicPlayer([])
 
@@ -74,8 +85,8 @@ class MainPage(tk.Frame):
         tk.Label(top_bar, text="🎵 Offline Music Player", fg="white", bg="#181818",
                  font=("Segoe UI", 12, "bold")).pack(side="left", padx=12)
         ttk.Button(top_bar, text="Home", command=lambda: controller.show_frame(MainPage)).pack(side="left", padx=6, pady=10)
-        ttk.Button(top_bar, text="Download", command=lambda: controller.show_frame(DownloadPage)).pack(side="left", padx=6)
-        ttk.Button(top_bar, text="Account", command=lambda: controller.show_frame(AccountPage)).pack(side="left", padx=6)
+        # ttk.Button(top_bar, text="Download", command=lambda: controller.show_frame(DownloadPage)).pack(side="left", padx=6)
+        ttk.Button(top_bar, text="Account", command=self.open_user_profile).pack(side="left", padx=6)
 
         # Main content area (3 columns)
         main_frame = tk.Frame(self, bg="#121212")
@@ -112,11 +123,18 @@ class MainPage(tk.Frame):
         ttk.Button(controls_frame, text="🗑 Delete Playlist", command=self.delete_playlist).pack(fill="x", padx=8, pady=4)
         ttk.Button(controls_frame, text="▶ Play Playlist", command=self.play_playlist).pack(fill="x", padx=8, pady=8)
         ttk.Separator(controls_frame, orient="horizontal").pack(fill="x", padx=8, pady=8)
-        ttk.Button(controls_frame, text="+ Add Song (pick file)", command=self.add_song_file_to_db).pack(fill="x", padx=8, pady=4)
-        ttk.Button(controls_frame, text="❌ Remove Song", command=self.remove_song).pack(fill="x", padx=8, pady=4)
+        # ttk.Button(controls_frame, text="+ Add Song (pick file)", command=self.add_song_file_to_db).pack(fill="x", padx=8, pady=4)
+        ttk.Button(
+            controls_frame,
+            text="Download song",
+            command=self.run_add_song_script
+        ).pack(fill="x", padx=8, pady=4)
+        # ttk.Button(controls_frame, text="❌ Remove Song", command=self.remove_song).pack(fill="x", padx=8, pady=4)
         ttk.Button(controls_frame, text="📷 Add Cover", command=self.add_playlist_cover).pack(fill="x", padx=8, pady=4)
         ttk.Button(controls_frame, text="🖼 Remove Cover", command=self.delete_playlist_cover).pack(fill="x", padx=8, pady=4)
+ 
 
+        
         # cover thumbnail
         self.cover_label = tk.Label(controls_frame, text="No cover", bg="#181818", fg="white")
         self.cover_label.pack(pady=8)
@@ -141,19 +159,61 @@ class MainPage(tk.Frame):
         player_controls = tk.Frame(bottom_bar, bg="#181818")
         player_controls.grid(row=0, column=1)
         ttk.Button(player_controls, text="⏮", command=self.previous_song).grid(row=0, column=0, padx=8)
-        ttk.Button(player_controls, text="▶", command=self.player.toggle_play).grid(row=0, column=1, padx=8)
+        ttk.Button(player_controls, text="▶", command=self.play_button_action).grid(row=0, column=1, padx=8)
         ttk.Button(player_controls, text="⏭", command=self.next_song).grid(row=0, column=2, padx=8)
+        ttk.Button(player_controls, text="⏸", command=self.pause_song).grid(row=0, column=3, padx=8)
+
 
         # volume placeholder
-        volume_frame = tk.Frame(bottom_bar, bg="#181818")
-        volume_frame.grid(row=0, column=2, sticky="e", padx=16)
-        tk.Label(volume_frame, text="🔊", fg="white", bg="#181818").pack(side="left")
-        ttk.Scale(volume_frame, from_=0, to=100, orient="horizontal", length=120).pack(side="left", padx=8)
+        # volume_frame = tk.Frame(bottom_bar, bg="#181818")
+        # volume_frame.grid(row=0, column=2, sticky="e", padx=16)
+        # tk.Label(volume_frame, text="🔊", fg="white", bg="#181818").pack(side="left")
+        # ttk.Scale(volume_frame, from_=0, to=100, orient="horizontal", length=120).pack(side="left", padx=8)
 
         # initial population
         self.disp_playlists()
 
     # -------------------- Playlist UI / DB Functions -------------------- #
+    def on_volume_change(self, val):
+        volume = float(val) / 100  # convert 0-100 to 0.0-1.0
+        self.player.set_volume(volume)
+    
+    def pause_song(self):
+        if self.player.playlist:
+            self.player.pause()  
+        else:
+            messagebox.showinfo("Info", "No song is currently playing.")
+
+    def play_button_action(self):
+        song_sel = self.songs_box.curselection()
+        playlist_sel = self.playlist_box.curselection()
+
+        if song_sel:
+            # play the selected song
+            self.play_selected_song()
+        elif playlist_sel:
+            # play the selected playlist
+            self.play_playlist()
+        else:
+            # resume/pause current playback
+            if self.player.playlist:
+                self.player.toggle_play()
+            else:
+                messagebox.showinfo("Info", "Select a song or playlist to play.")
+
+    
+    def run_add_song_script(self):
+        script_path = os.path.join(os.path.dirname(__file__), "add_song.py")
+        if os.path.exists(script_path):
+            # Run in a separate process
+            subprocess.Popen([sys.executable, script_path])
+        else:
+            messagebox.showerror("Error", "add_song.py not found!")
+
+    def open_user_profile(self):
+        # Make sure it runs with the same Python interpreter
+        subprocess.Popen([sys.executable, "user_profile.py"])
+
     def disp_playlists(self):
         self.playlist_box.delete(0, tk.END)
         self.playlist_ids = []
@@ -164,11 +224,25 @@ class MainPage(tk.Frame):
         for pid, name in playlists:
             self.playlist_box.insert(tk.END, name)
             self.playlist_ids.append(pid)
+        # Auto-select first playlist after widget fully rendered
+        if self.playlist_ids:
+            self.playlist_box.selection_set(0)
+            # Schedule the update to happen after Tkinter mainloop starts
+            self.after(100, self.show_playlist_songs)
+
 
     def create_playlist(self):
-        new_id = curr_user.createNew(firstSong=1)  # dummy firstSong
-        messagebox.showinfo("Success", f"Created playlist #{new_id}")
-        self.disp_playlists()
+        """
+        Creates a new empty playlist for the current user.
+        """
+        try:
+            # Pass None as firstSong to create an empty playlist
+            new_id = curr_user.createNew(None)
+            messagebox.showinfo("Success", f"Created empty playlist #{new_id}")
+            self.disp_playlists()
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not create playlist:\n{str(e)}")
+
 
     def rename_playlist_popup(self):
         selection = self.playlist_box.curselection()
@@ -265,24 +339,30 @@ class MainPage(tk.Frame):
         if not sel:
             return
         idx = sel[0]
-        # find corresponding file path at same index among stored paths if present
-        # but songs_box may contain items without file paths, so we try to find mapping by song name
-        chosen_text = self.songs_box.get(idx)
-        song_name = chosen_text.split(" - ")[0]
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("SELECT file_path FROM songsDownloaded WHERE song_name = ?", (song_name,))
-        row = cursor.fetchone()
-        conn.close()
-        if row and row[0] and os.path.exists(row[0]):
-            self.player.playlist = [row[0]]
-            self.player.current_index = 0
-            self.player.play()
-            self.update_song_info(row[0])
-        else:
-            messagebox.showwarning("Missing file", "File path not found for this song or file is missing on disk.")
+
+        if idx >= len(self.current_playlist_paths):
+            messagebox.showwarning("Missing file", "File path not found for this song.")
+            return
+
+        song_path = self.current_playlist_paths[idx]
+        if not os.path.exists(song_path):
+            messagebox.showwarning("Missing file", "File missing on disk:\n" + song_path)
+            return
+
+        if not self.current_playlist_paths:
+            messagebox.showwarning("Empty", "No songs in the playlist.")
+            return
+
+        self.player.playlist = self.current_playlist_paths
+        self.player.current_index = idx
+        self.player.play()
+        self.update_song_info(self.current_playlist_paths[idx])
+
+        self.update_song_info(song_path)
+
 
     def play_playlist(self):
+        print("Current playlist ID:", self.current_playlist_id)
         if not self.current_playlist_id:
             messagebox.showwarning("Oops", "Select a playlist first!")
             return
@@ -368,7 +448,10 @@ class MainPage(tk.Frame):
         if not self.current_playlist_id:
             messagebox.showwarning("Oops", "Select a playlist first")
             return
-        file_path = filedialog.askopenfilename(title="Select Cover Image", filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.gif")])
+        file_path = filedialog.askopenfilename(
+            title="Select Cover Image",
+            filetypes=[("Images", "*.png *.jpg *.jpeg *.gif")]
+        )
         if not file_path:
             return
         pl = Playlist(DB_FILE, self.current_playlist_id)
@@ -479,7 +562,6 @@ class DownloadPage(tk.Frame):
 
     # ------------------ YouTube download ------------------
     def download_youtube_audio(self):
-        import threading
         try:
             import yt_dlp
         except ImportError:
@@ -491,13 +573,8 @@ class DownloadPage(tk.Frame):
             messagebox.showwarning("No URL", "Please enter a YouTube video URL.")
             return
 
-        # ensure download folder
-        if not hasattr(curr_user, "download_folder") or not curr_user.download_folder:
-            self.select_download_folder()
-            if not hasattr(curr_user, "download_folder") or not curr_user.download_folder:
-                return
-
-        user_folder = curr_user.download_folder
+        # Ensure user download folder exists
+        user_folder = os.path.join(DOWNLOAD_DIR, curr_user.username)
         os.makedirs(user_folder, exist_ok=True)
 
         def download_thread():
@@ -505,18 +582,42 @@ class DownloadPage(tk.Frame):
                 "format": "bestaudio/best",
                 "outtmpl": os.path.join(user_folder, "%(title)s.%(ext)s"),
                 "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}],
+                "final_ext": "mp3",
                 "quiet": True,
-                "no_warnings": True
+                "no_warnings": True,
+                "noplaylist": True,
             }
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.download([url])
-                messagebox.showinfo("Download Complete", f"Audio downloaded to:\n{user_folder}")
+
+                # Find the newest downloaded file
+                downloaded_files = [
+                    os.path.join(user_folder, f) for f in os.listdir(user_folder)
+                    if os.path.isfile(os.path.join(user_folder, f))
+                ]
+                latest_file = max(downloaded_files, key=os.path.getctime)
+                latest_file_abs = os.path.abspath(latest_file)
+
+                # Insert into songsDownloaded table
+                conn = sqlite3.connect(DB_FILE)
+                c = conn.cursor()
+                song_name = os.path.splitext(os.path.basename(latest_file_abs))[0]
+                c.execute("""
+                    INSERT INTO songsDownloaded (song_name, artist_name, file_path)
+                    VALUES (?, ?, ?)
+                """, (song_name, None, latest_file_abs))
+                conn.commit()
+                conn.close()
+
+                messagebox.showinfo("Download Complete", f"Audio downloaded to:\n{latest_file_abs}")
                 self.populate_downloads()
+
             except Exception as e:
                 messagebox.showerror("Download Error", str(e))
 
         threading.Thread(target=download_thread, daemon=True).start()
+
 
     # ------------------ Downloaded songs ------------------
     def populate_downloads(self):
@@ -603,5 +704,10 @@ class AccountPage(tk.Frame):
 # 🧭 START APPLICATION
 # -------------------------------
 if __name__ == "__main__":
-    app = MusicApp()
-    app.mainloop()
+    user_id = show_login()  # show login first
+    if user_id:  # login successful
+        curr_user = User(DB_FILE, user_id)
+        app = MusicApp(curr_user)
+        app.mainloop()
+    else:
+        print("Login failed or cancelled. Exiting.")
