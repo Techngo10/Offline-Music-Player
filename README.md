@@ -1,7 +1,8 @@
 # Offline-Music-Player
 
 A simple offline music player built in Python using `pygame`.  
-Supports play, pause, next/previous track, shuffle, and loop.
+Utilizes yt-dlp libary to download mp3 files from youtube, aimed at people who like songs exclusive to youtube and want to save them
+Supports play, pause, next/previous track, cover art, and user accounts.
 
 ---
 
@@ -9,19 +10,13 @@ Supports play, pause, next/previous track, shuffle, and loop.
 
 1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Techngo10/Offline-Music-Player
 cd Offline-Music-Player
 ```
 
 2. Set up the virtual environment
 ```
 python -m venv .venv
-```
-
-4. Activate it in powershell terminal and run
-```
-.venv\Scripts\activate
-.venv\Scripts\activate.bat
 ```
 
 5. Run the needed python dependencies
