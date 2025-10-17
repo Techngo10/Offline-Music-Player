@@ -19,20 +19,26 @@ cd Offline-Music-Player
 python -m venv .venv
 ```
 
-5. Run the needed python dependencies
+3. Activate your virtual enviourment
 ```
-pip install pygame
+Windows (PowerShell / CMD):
+.venv\Scripts\activate
+
+Mac/Linux:
+source .venv/bin/activate
 ```
 
-7. Add music files
+4. Install all dependencies from requirements.txt
 ```
- └── songs/
-     ├── songname.mp3
-     ├── songname.mp3
-     └── songname.mp3
+pip install -r requirements.txt
 ```
 
-9. Run the CLI player
+5. Verify installation
+```
+pip list
+```
+
+6. Run the CLI player
 ```
 python cli_player.py
 ```
