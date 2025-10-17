@@ -5,6 +5,7 @@ Utilizes yt-dlp libary to download mp3 files from youtube, aimed at people who l
 Supports play, pause, next/previous track, cover art, and user accounts.
 
 About Repository structure: 
+'''
 Offline-Music-Player/
 ├── Classes.py                 # Defines the core classes: User and Playlist. Handles all DB operations for users, playlists, and songs.
 ├── Databases.py               # Initializes the SQLite database and creates all required tables.
@@ -18,6 +19,7 @@ Offline-Music-Player/
 ├── downloads/                 # Folder where downloaded audio files are stored.
 ├── musicApp.db                # SQLite database file (created after running Databases.py).
 ├── README.md                  # This file.
+'''
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
